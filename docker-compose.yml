@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/pgdata:/var/lib/postgresql/data
+      - ./init_database.sql:/docker-entrypoint-initdb.d/init_database.sql
+    command: postgres -c listen_addresses='*'
+    environment:
+      POSTGRES_DB: ecommerce_db
+      POSTGRES_USER: fastapi_user
+      POSTGRES_PASSWORD: fastapi_pass
+    networks:
+      - ecommerce_net
+  fastapi:
+    build: .
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/root/task
+    working_dir: /root/task
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - ecommerce_net
+networks:
+  ecommerce_net:
+    driver: bridge
